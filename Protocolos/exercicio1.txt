@@ -1,0 +1,23 @@
+Protocolo para transferencia de um arquivo:
+
+1. O TX envia ao RX uma string (ASCII) de inicio: "iniciando transferencia\n"
+
+2. O RX responde com uma string (ASCII) sinalizando que esta apto a receber "apto a receber\n". (novo passo) Caso não receba a string esperada do TX: "iniciando transferencia\n", o RX envia a string (ASCII) "inapto a receber\n" e o processo é encerrado.
+
+4. Caso TX receba a string "apto a receber\n" de RX, o processo segue normalmente, caso contrário, o processo é encerrado e TX mostra a mensagem: "inapto a realizar transferencia".
+
+5. O TX inicia o processo de envio enviando o nome do arquivo em formato de string (ASCII) acompanhado de um '\n' ao final, após isso, lê linha a linha do arquivo e as envia ao RX em formato de uma string (ASCII). Ao terminar o envio das linhas do arquivo o TX envia ao RX uma string (ASCII) "TX__EOF__RX\n" indicando fim de arquivo.
+
+6. O RX recebe o nome do arquivo e a mensagem e os decodifica, identificando as linhas do arquivo por meio do caractere de fim de linha '\n’.
+
+7. O RX escreve cada linha recebida em um novo arquivo de mesmo nome no diretorio ~/Documentos
+
+8. O RX mostra a quantidade de bytes escritos.
+
+9. O RX envia uma mensagem em formato de string (ASCII) de confirmação de recebimento e cópia do arquivo para o TX: "arquivo recebido e copiado com sucesso\n". Caso ocorra algum erro o RX irá enviar a mensagem "erro: (mensagem de erro) ao transferir arquivo\n" em formato (ASCII) para o TX.
+
+10. Ao receber a confirmacao de RX, o TX imprime uma mensagem de transferência finalizada: "transferencia de arquivo finalizada". Caso receba algo diferente do RX, o TX ira exibir a seguinte mensagem de erro: "falha ao transferir arquivo"
+
+
+TX: Alexa
+RX: Gabriel
