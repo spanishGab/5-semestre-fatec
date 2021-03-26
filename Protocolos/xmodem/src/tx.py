@@ -17,7 +17,7 @@ def transfer_file(port_path: str, file_path: str):
 
     file_size = os.stat(file_path).st_size
     packet_quantity = math.ceil(file_size / 128)
-    print("pkt qtt: "+str(packet_quantity))
+    print("Packet quantity: "+str(packet_quantity))
 
     packet = Packet()
     with open(file_path, mode='r', encoding='ASCII') as reader:
@@ -37,7 +37,6 @@ def transfer_file(port_path: str, file_path: str):
 
             tx.write(packet.data)
 
-            print(str(packet.checksum))
             tx.write(str(packet.checksum).encode()+END_OF_LINE)
 
             transference_response = tx.readline().replace(END_OF_LINE, b'')
@@ -50,6 +49,8 @@ def transfer_file(port_path: str, file_path: str):
                 print("The packet bytes sent was incomplete. "+
                     " Finishing transference process")
                 return
+            
+            print(f"Packet {pq} sent, {packet_quantity-pq} left")
             
         tx.write(EOT+END_OF_LINE)
     
