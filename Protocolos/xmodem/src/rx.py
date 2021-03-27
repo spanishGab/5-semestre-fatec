@@ -9,52 +9,75 @@ def receive_file(port: str, file_name: str):
     rx = serial.Serial(port)
 
     # starting the transference by seending a NAK byte
-    rx.write(NAK+END_OF_LINE)
+    rx.write(NAK)
     print("Sending NAK to TX\n")
 
     packet = Packet()
 
-    received_line = rx.readline().replace(END_OF_LINE, b'')
+    # waiting for a SOH
+    received_line = rx.read(1)
     print("Receiving line from TX\n")
+
+    # creating a new empty file to receive the content  
+    open(os.path.join(TRANSFER_DIRECTORY, file_name),
+        mode='w',
+        encoding='ASCII'
+    ).close()
     
     while received_line != EOT:
         print("="*55)
         print("Starting to receive a packet\n")
+
+        # checking whether the character received was a SOH
         if received_line == SOH:
             try:
                 print("\tGot a SOH char")
 
-                pack_number = rx.readline().replace(END_OF_LINE, b'')
-                print(f"\tPacket sequece_number: {pack_number}")
+                # reading the package number
+                packet_number = rx.read(1)
+                print(f"\tPacket sequece_number: {packet_number}")
 
-                pack_number_compliment = rx.readline().replace(END_OF_LINE, b'')
-                print("\tPacket pack_number_compliment: "+
-                    f"{pack_number_compliment}")
+                # reading the package number compliment
+                packet_number_compliment = rx.read(1)
+                print("\tPacket packet_number_compliment: "+
+                    f"{packet_number_compliment}")
 
+                # reading the package data
                 data = rx.read(128)
 
-                checksum = int(rx.readline().replace(END_OF_LINE, b'').decode())
+                # reading the checksum
+                checksum = rx.read(1)
                 print(f"\tPacket checksum: {checksum}")
+            
             except UnicodeDecodeError as ue:
                 print(ue)
-                rx.write(CAN+END_OF_LINE)
+                rx.write(CAN)
 
-            packet.pack_number = int.from_bytes(pack_number, 'big')
+            # instantiating a new package to validate the received package
+            packet.packet_number = int.from_bytes(packet_number, 'big')
             packet.data = data.decode()
-            packet.set_pack_number_compliment()
+            packet.set_packet_number_compliment()
             packet.set_checksum()
 
-            if pack_number_compliment != packet.pack_number_compliment:
+            # checking whether the package number compliment calculated
+            # is different from the received one
+            if packet_number_compliment != packet.packet_number_compliment:
                 print("\tThe packet compliment number received "+
-                    f"({pack_number_compliment}) doesn't match the "+
-                    f" calculated one ({packet.pack_number_compliment})")
+                    f"({packet_number_compliment}) doesn't match the "+
+                    f" calculated one ({packet.packet_number_compliment})")
                 
-                rx.write(CAN+END_OF_LINE)
+                # sending a CAN char in case the compliments are different
+                rx.write(CAN)
             
+            # checking whether the package checksum calculated
+            # is equals to the received one
             if checksum == packet.checksum:
                 print("\tChecksum validated!")
-                rx.write(ACK+END_OF_LINE)
+
+                # sending an ACK char to confirm the package validation
+                rx.write(ACK)
                 
+                # writing the received data to a new file
                 with open(os.path.join(TRANSFER_DIRECTORY, file_name),
                     mode='a+',
                     encoding='ASCII'
@@ -64,18 +87,26 @@ def receive_file(port: str, file_name: str):
 
             else:
                 print(f"\tInvalid Checksum! {checksum} != {packet.checksum}")
-                rx.write(NAK+END_OF_LINE)
+                rx.write(NAK)
 
         print("\nPacket successfully received\n")
         print("="*55)
-        received_line = rx.readline().replace(END_OF_LINE, b'')
+
+        # waiting for a SOH or an EOT char
+        received_line = rx.read(1)
     
-    rx.write(NAK+END_OF_LINE)
+    #! rz não implementa o segundo envio de EOT?
+    # # sending a NAK char to TX
+    # rx.write(NAK)
     
-    transaction_complete = rx.readline().replace(END_OF_LINE, b'')
+    # # waiting for a EOT char to finish the transference
+    # transaction_complete = rx.read(1)
     
-    if transaction_complete == EOT:
-        rx.write(ACK+END_OF_LINE)
+    # if transaction_complete == EOT:
+    #     # sending a ACK char to TX to confirm the transference end
+    
+    # # sending a ACK char to TX
+    rx.write(ACK)
 
 
 if __name__ == '__main__':

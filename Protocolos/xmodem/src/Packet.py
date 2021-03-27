@@ -2,8 +2,8 @@ from common_constants import SOH
 
 class Packet:
     
-    def __init__(self, pack_number: int=None, data: str=None):
-        self.pack_number = pack_number
+    def __init__(self, packet_number: int=None, data: str=None):
+        self.packet_number = packet_number
         self.data = data
 
     @property
@@ -11,30 +11,30 @@ class Packet:
         return SOH
     
     @property
-    def pack_number(self):
-        return self.__pack_number
+    def packet_number(self):
+        return self.__packet_number
 
-    @pack_number.setter
-    def pack_number(self, pack_number):
-        if pack_number is None:
-            self.__pack_number = None
-        elif isinstance(pack_number, int):
-            self.__pack_number = bytes([pack_number % 8])
+    @packet_number.setter
+    def packet_number(self, packet_number):
+        if packet_number is None:
+            self.__packet_number = None
+        elif isinstance(packet_number, int):
+            self.__packet_number = bytes([packet_number])
         else:
-            raise ValueError("The 'pack_number' param must be an instance of the "+
-                "int class, got"+str(type(pack_number)))
+            raise ValueError("The 'packet_number' param must be an instance of the "+
+                "int class, got"+str(type(packet_number)))
     
     @property
-    def pack_number_compliment(self):
-        return self.__pack_number_compliment
+    def packet_number_compliment(self):
+        return self.__packet_number_compliment
     
-    def set_pack_number_compliment(self):
-        pack_number_compliment = int.from_bytes(self.pack_number, 'big')
+    def set_packet_number_compliment(self):
+        packet_number_compliment = int.from_bytes(self.packet_number, 'big')
         
-        pack_number_compliment = ~pack_number_compliment
+        packet_number_compliment = ~packet_number_compliment
         
-        self.__pack_number_compliment = bytes(
-            [pack_number_compliment & 0xff]
+        self.__packet_number_compliment = bytes(
+            [packet_number_compliment & 0xff]
         )
 
     @property
@@ -59,11 +59,13 @@ class Packet:
         return self.__checksum
     
     def set_checksum(self):
-        self.__checksum = 0
+        checksum = 0
         for c in self.data.decode():
-            self.__checksum += ord(c)
+            checksum += ord(c)
 
-        self.__checksum %= 256
+        self.__checksum = bytes(
+            [checksum & 0xff]
+        )
 
 
 
