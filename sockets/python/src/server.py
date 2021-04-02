@@ -5,7 +5,6 @@ from constants import *
 
 from concurrent.futures import ThreadPoolExecutor
 
-HOST = '127.0.0.1'
 
 SERVERS = {
     'server_1': {
@@ -27,42 +26,44 @@ SERVERS = {
     },
 }
 
+
 def start_connections():
-    SERVERS['server_1']['tcp'].bind((HOST, SERVERS['server_1']['port']))
-    SERVERS['server_2']['tcp'].bind((HOST, SERVERS['server_2']['port']))
-    SERVERS['server_3']['tcp'].bind((HOST, SERVERS['server_3']['port']))
+    for server in SERVERS.keys():
+        # binding the server to its port and host
+        SERVERS[server]['tcp'].bind((HOST, SERVERS[server]['port']))
+        # listening to connection attempts
+        SERVERS[server]['tcp'].listen(1)
 
-    SERVERS['server_1']['tcp'].listen(1)
-    SERVERS['server_2']['tcp'].listen(1)
-    SERVERS['server_3']['tcp'].listen(1)
-
+    # starting the client - server connections
     for server in SERVERS.values():
-        print("Trying to connect")
+        print(PORT_MESSAGE.format(port=server['port'], msg="trying to connect"))
 
         server['conn'], _ = server['tcp'].accept()
         
-        print("Connection done")
+        print(PORT_MESSAGE.format(port=server['port'], msg="connection done"))
 
 
 def shutdown_connections():
+    # shutting down the client - server connections
     for server in SERVERS.values():
+        print(PORT_MESSAGE.format(port=server['port'], msg="shutting down"))
         server['conn'].shutdown(SHUT_RDWR)
 
 
-def receive_matrices_lines(conn: socket.socket) -> tuple:
-    # print("Reading matrices lines")
-    lines = conn.recv(MAX_BUFFER_SIZE).decode()
-    # print("Lines reead")
+def receive_matrices_lines(server: dict) -> tuple:
+    print(PORT_MESSAGE.format(port=server['port'], msg="reading matrices lines"))
+    
+    lines = server['conn'].recv(MAX_BUFFER_SIZE).decode()
+    
+    print(PORT_MESSAGE.format(port=server['port'], msg="lines read"))
 
+    # preparing lines to be added
     lines = lines.split(LINE_SEP)
 
-    # print("Eval a_line")
     a_line = eval(lines[0])
-    
-    # print("Eval b_line")
+
     b_line = eval(lines[1])
 
-    # print("Returning a_line, b_line")
     return (a_line, b_line)
 
 
@@ -75,53 +76,68 @@ def calculate_lines_sum(a_line: list, b_line: list) -> list:
     return result_line
 
 
-def make_lines_transference(server: dict):
+def make_lines_transference(server: dict) -> object:
+    # awaits for lines until client doesn't send any more
     while True:
-        print("Waiting for a STX, port: ", server['port'])
+        # waiting for a STX byte to start the transference
+        print(PORT_MESSAGE.format(port=server['port'], msg="waiting for a STX byte"))
         transference_start = server['conn'].recv(1)
-        # print("Got: ", str(transference_start))
 
+        # checking whether the STX byte was received
         if transference_start == STX:
-            print("Sending ACK to the client")
+            print(PORT_MESSAGE.format(port=server['port'], msg="STX rceived"))
+            
+            # sending the ACK byte to confirm transference begin
+            print(PORT_MESSAGE.format(port=server['port'], msg="sending ACK byte"))
             server['conn'].send(ACK)
         else:
-            print("Could not start transference")
-            return
+            print(PORT_MESSAGE.format(port=server['port'], 
+                msg="could not start transference, aborting!"))
+            return None
 
-        # print("Receiving matrices lines")
-        a_line, b_line = receive_matrices_lines(server['conn'])
-        # print("Lines rceived")
+        # receiving matrices lines
+        a_line, b_line = receive_matrices_lines(server)
 
-        # print("Calculating sum")
+        # calculating lines sum
+        print(PORT_MESSAGE.format(port=server['port'], msg="calculating lines sum"))
         result_line = calculate_lines_sum(a_line, b_line)
-        # print("Sum calculated")
 
+        # preparing to send the result to the client
         result_line = str(result_line)
 
+        print(PORT_MESSAGE.format(port=server['port'], msg="sending results"))
         server['conn'].send(result_line.encode())
 
+        print(PORT_MESSAGE.format(port=server['port'], 
+            msg="waiting for an ACK byte"))
         receivement_confirmation = server['conn'].recv(1)
         
         if receivement_confirmation == ACK:
-            print("Results sent successfully")
+            print(PORT_MESSAGE.format(port=server['port'], msg="ACK received"))
+
+            print(PORT_MESSAGE.format(port=server['port'], 
+                msg="results sent successfully"))
+
+            # sending an EOT byte to confirm transference end
             server['conn'].send(EOT)
         else:
-            print("An error occoured while sendind results")
-            return
-
+            print(PORT_MESSAGE.format(port=server['port'], 
+                msg="an error occoured while sendind results, aborting!"))
+            return None
 
 
 if __name__ == '__main__':
     start_connections()
 
     try:
+        # starting the transferences
         with ThreadPoolExecutor(max_workers=3) as executor:
             executor.submit(make_lines_transference, SERVERS['server_1'])
             executor.submit(make_lines_transference, SERVERS['server_2'])
             executor.submit(make_lines_transference, SERVERS['server_3'])
     except Exception as e:
-        print(str(e))
         shutdown_connections()
+        raise e
     finally:
         shutdown_connections()
 
