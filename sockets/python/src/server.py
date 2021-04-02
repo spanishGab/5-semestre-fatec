@@ -50,20 +50,23 @@ def shutdown_connections():
 
 
 def receive_matrices_lines(conn: socket.socket) -> tuple:
-    lines = conn.recv(1024).decode()
+    # print("Reading matrices lines")
+    lines = conn.recv(MAX_BUFFER_SIZE).decode()
+    # print("Lines reead")
 
     lines = lines.split(LINE_SEP)
 
+    # print("Eval a_line")
     a_line = eval(lines[0])
     
+    # print("Eval b_line")
     b_line = eval(lines[1])
 
+    # print("Returning a_line, b_line")
     return (a_line, b_line)
 
 
-def calculate_lines_sum(conn: socket.socket) -> list:
-    a_line, b_line = receive_matrices_lines(conn)
-
+def calculate_lines_sum(a_line: list, b_line: list) -> list:
     result_line = []
     
     for i in range(0, len(a_line)):
@@ -72,29 +75,36 @@ def calculate_lines_sum(conn: socket.socket) -> list:
     return result_line
 
 
-def make_lines_transference(conn: socket.socket):
+def make_lines_transference(server: dict):
     while True:
-        print("Waiting for a STX")
-        transference_start = conn.recv(1)
+        print("Waiting for a STX, port: ", server['port'])
+        transference_start = server['conn'].recv(1)
+        # print("Got: ", str(transference_start))
 
         if transference_start == STX:
             print("Sending ACK to the client")
-            conn.send(ACK)
+            server['conn'].send(ACK)
         else:
             print("Could not start transference")
             return
 
-        result_line = calculate_lines_sum(conn)
+        # print("Receiving matrices lines")
+        a_line, b_line = receive_matrices_lines(server['conn'])
+        # print("Lines rceived")
+
+        # print("Calculating sum")
+        result_line = calculate_lines_sum(a_line, b_line)
+        # print("Sum calculated")
 
         result_line = str(result_line)
 
-        conn.send(result_line.encode())
+        server['conn'].send(result_line.encode())
 
-        receivement_confirmation = conn.recv(1)
+        receivement_confirmation = server['conn'].recv(1)
         
         if receivement_confirmation == ACK:
             print("Results sent successfully")
-            conn.send(EOT)
+            server['conn'].send(EOT)
         else:
             print("An error occoured while sendind results")
             return
@@ -106,10 +116,9 @@ if __name__ == '__main__':
 
     try:
         with ThreadPoolExecutor(max_workers=3) as executor:
-            for _ in range(0, 3):
-                executor.submit(make_lines_transference, SERVERS['server_1']['conn'])
-                executor.submit(make_lines_transference, SERVERS['server_2']['conn'])
-                executor.submit(make_lines_transference, SERVERS['server_3']['conn'])
+            executor.submit(make_lines_transference, SERVERS['server_1'])
+            executor.submit(make_lines_transference, SERVERS['server_2'])
+            executor.submit(make_lines_transference, SERVERS['server_3'])
     except Exception as e:
         print(str(e))
         shutdown_connections()
