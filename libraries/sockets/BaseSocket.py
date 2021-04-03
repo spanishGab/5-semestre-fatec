@@ -3,9 +3,11 @@ from socket import AF_INET, SOCK_STREAM, SHUT_RDWR
 
 from ..constants.constants import TYPE_ERROR_MESAGE
 
+from abc import ABC, abstractmethod
+
 STANDARD_LOG_MESSAGE = "Port {port}: {msg}"
 
-class BaseSocket:
+class BaseSocket(ABC):
 
     def __init__(self, host: str='127.0.0.1', port: int=5000):
         self.host = host
@@ -20,7 +22,7 @@ class BaseSocket:
         if isinstance(host, str):
             self.__host = host        
         else:
-            raise TypeError(TYPE_ERROR_MESAGE.format(param='host', 
+            raise TypeError(TYPE_ERROR_MESAGE.format(param='host', tp='str',
                 inst=str(type(host))))
     
     @property
@@ -32,36 +34,32 @@ class BaseSocket:
         if isinstance(port, int):
             self.__port = port        
         else:
-            raise TypeError(TYPE_ERROR_MESAGE.format(param='port', 
+            raise TypeError(TYPE_ERROR_MESAGE.format(param='port', tp='int',
                 inst=str(type(port))))
 
     @property
     def connection(self):
         return self.__connection
-
-    def connect(self, family: int=AF_INET, socket_type: int=SOCK_STREAM):
-        if not isinstance(family, int):
-            raise TypeError(TYPE_ERROR_MESAGE.format(param='family', 
-                inst=str(type(family))))
-        
-        if not isinstance(socket_type, int):
-            raise TypeError(TYPE_ERROR_MESAGE.format(param='socket_type', 
-                inst=str(type(socket_type))))
-
-        try:
-            tcp = socket.socket(family=AF_INET, type=SOCK_STREAM)
-        except ValueError:
-            raise ValueError("The given 'socket_type' is not a valid socket type")
-
-        self.__connection = tcp.connect((host, port))
     
+    @connection.setter
+    def connection(self, connection: socket.socket):
+        if isinstance(connection, socket.socket):
+            self.__connection = connection
+        else:
+            raise TypeError(TYPE_ERROR_MESAGE.format(param='connection', 
+                tp='socket.socket', inst=str(type(connection))))
+
+    @abstractmethod
+    def connect(self, family: int=AF_INET, socket_type: int=SOCK_STREAM):
+        pass
+
     def send_message(self, message: bytes):
         """ Sends the given message through the connected port
 
         Args:
             message (bytes): the message to be sent
         """
-        self.__connection.send(message)
+        self.connection.send(message)
     
     def receive_message(self, buffer_size: int) -> bytes:
         """ Receives a massege through the connected port
@@ -82,5 +80,6 @@ class BaseSocket:
             message (object): the message to be logged
         """
         print(STANDARD_LOG_MESSAGE.format(port=self.port, msg=message))
-
-
+    
+    def shutdown_connection(self, how: int=SHUT_RDWR):
+        self.connection.shutdown(how)
