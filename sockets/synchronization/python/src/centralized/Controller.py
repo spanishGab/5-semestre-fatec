@@ -16,11 +16,10 @@ import socket
 
 class Controller():
     
-    def __init__(self, semaphore: int):
-        self.semaphore = semaphore
+    def __init__(self, max_accesses: int):
         self.__connections = {}
 
-        self.__max_accesses = semaphore
+        self.__max_accesses = max_accesses
         self.__acquire_calls = 0
     
     @property
@@ -30,7 +29,8 @@ class Controller():
     def add_connection(self, 
                        connection_alias: str, 
                        host: str='127.0.0.1', 
-                       port: int=5000):
+                       port: int=5000,
+                       listen: int=1):
         if isinstance(connection_alias, str):
             self.__connections[connection_alias] = Server(host, port)
             self.__connections[connection_alias].connect()
@@ -40,67 +40,93 @@ class Controller():
                 inst=str(type(connection_alias))))
 
     @property
-    def semaphore(self):
-        return self.__semaphore
+    def max_accesses(self):
+        return self.__max_accesses
     
-    @semaphore.setter
-    def semaphore(self, semaphore: int):
-        if isinstance(semaphore, int):
-            if semaphore >= 0:
-                self.__semaphore = semaphore
+    @max_accesses.setter
+    def max_accesses(self, max_accesses: int):
+        if isinstance(max_accesses, int):
+            if max_accesses > 0:
+                self.__max_accesses = max_accesses
             else:
-                raise ValueError("The 'semaphore' param must be bigger than"+
-                    " or equal to 0 (zero)")
+                raise ValueError("The 'max_accesses' param must be bigger than"+
+                    " 0 (zero)")
         else:
-            raise TypeError(TYPE_ERROR_MESAGE.format(param='semaphore', 
-                inst=str(type(semaphore))))
+            raise TypeError(TYPE_ERROR_MESAGE.format(param='max_accesses', 
+                inst=str(type(max_accesses))))
 
-    def _acquire(self) -> bool:
-        if self.semaphore >= 0:
-            self.semaphore -= 1
+    def _acquire(self, semaphore: int) -> object:
+        if semaphore >= 0:
+            semaphore -= 1
             self.__acquire_calls +=1
             
-            return True
+            return semaphore
         
         return False
 
-    def _release(self) -> bool:
-        release_test = self.semaphore
+    def _release(self, semaphore: int) -> object:
+        release_test = semaphore
         
-        if release_test == (self.__max_accesses - self.__acquire_calls):
-            self.semaphore += 1
+        if release_test == (self.max_accesses - self.__acquire_calls):
+            release_test += 1
             self.__acquire_calls -= 1
-            return True
+            return release_test
         
         return False
     
-    def request_aquire(self, conn_alias: str):
+    def request_aquire(self, conn_alias: str, semaphore: int) -> object:
         try:
+            self.connections[conn_alias].log_message("Waiting for an NAK byte")
             request = self.connections[conn_alias].receive_message(1)
 
             if request == NAK:
-                if self._acquire():
+                self.connections[conn_alias].log_message("NAK byte received")
+
+                acquire_response = self._acquire(semaphore)
+
+                if acquire_response is not False:
+                    self.connections[conn_alias].log_message("Sending an ACK byte, "+
+                        "acquired semaphore!")
+
                     self.connections[conn_alias].send_message(ACK)
+                    return acquire_response
                 else:
+                    self.connections[conn_alias].log_message("Sending an CAN byte, "+
+                        "could not acquire semaphore!")
+
                     self.connections[conn_alias].send_message(CAN)
             else:
                 self.connections[conn_alias].log_message("NAK byte not received")
+                return None
         except KeyError:
             raise KeyError("The '"+conn_alias+"' connection alias does not exist")
     
-    def request_release(self, conn_alias: str):
+    def request_release(self, conn_alias: str, semaphore: int) -> object:
         try:
+            self.connections[conn_alias].log_message("Waiting for an NAK byte")
             request = self.connections[conn_alias].receive_message(1)
 
             if request == NAK:
-                if self._release():
+                self.connections[conn_alias].log_message("NAK byte received")
+
+                release_response = self._release(semaphore)
+                
+                if release_response is not False:
+                    self.connections[conn_alias].log_message("Sending an ACK byte, "+
+                        "released semaphore!")
+
                     self.connections[conn_alias].send_message(ACK)
+                    return release_response
                 else:
+                    self.connections[conn_alias].log_message("Sending an CAN byte, "+
+                        "could not release semaphore!")
+
                     self.connections[conn_alias].send_message(CAN)
                     raise Exception("Client requested a 'release' before an 'acquire'"+
                         ", aborting!")
             else:
                 self.connections[conn_alias].log_message("NAK byte not received")
+                return None
         except KeyError:
             raise KeyError("The '"+conn_alias+"' connection alias does not exist")
 

@@ -2,22 +2,43 @@ from constants import DEFAULT_HOST
 
 from Controller import Controller
 
-def controll_access():
-    controller = Controller(semaphore=1)
+from  concurrent.futures import ThreadPoolExecutor
 
-    controller.add_connection('client_1', host=DEFAULT_HOST, port=5000)
-    controller.add_connection('client_2', host=DEFAULT_HOST, port=5001)
+FOO_CLIENT_PORT = 5000
+BAR_CLIENT_PORT = 5001
 
-    while True:
-        controller.request_aquire('client_1')
-        controller.request_release('client_1')
+controller_semaphore = 1
 
-        controller.request_aquire('client_2')
-        controller.request_release('client_2')
+
+def controll_access(client: str, port: int):
+    global controller_semaphore
+    controller = Controller(controller_semaphore)
+
+    try:
+        controller.add_connection(connection_alias=client, host=DEFAULT_HOST, 
+            port=port, listen=1)
+        controller.connections[client].log_message("Connected to "+ client)
+
+        while controller_semaphore == 0: continue
+
+        controller.connections[client].log_message(client+" requesting acquire")
+        controller_semaphore = controller.request_aquire(client, controller_semaphore)
+
+        controller.connections[client].log_message(client+" requesting release")
+        controller_semaphore = controller.request_release(client, controller_semaphore)
+    except Exception as e:
+            controller.connections[client].shutdown_connection()
+            raise e
+    finally:
+        controller.connections[client].shutdown_connection()
 
 
 
 if __name__ == '__main__':
-    controll_access()
+    # controll_access('client_foo', FOO_CLIENT_PORT)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        executor.submit(controll_access, 'client_foo', FOO_CLIENT_PORT)
+        executor.submit(controll_access, 'client_bar', BAR_CLIENT_PORT)
+        
 
 
