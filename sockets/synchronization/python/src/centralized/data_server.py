@@ -13,10 +13,11 @@ import time
 
 from  concurrent.futures import ThreadPoolExecutor
 
-FOO_CLIENT_PORT = 5002
-BAR_CLIENT_PORT = 5003
+FOO_CLIENT_PORT = 6000
+BAR_CLIENT_PORT = 6001
+TMP_CLIENT_PORT = 6002
 
-clients_message = ["Clients message",]
+clients_message = ["Clients mesage",]
 
 def server(port: int):
     global clients_message
@@ -25,25 +26,36 @@ def server(port: int):
         try:
             data_server = Server(host=DEFAULT_HOST, port=port)
             data_server.connect()
+            data_server.log_message("Connected to port "+str(port))
 
+            data_server.log_message("Waiting for a STX byte")
             client_request = data_server.receive_message(1)
 
             if client_request == STX:
+                data_server.log_message("STX byte received")
+                data_server.log_message("Sending ACK byte to start transference")
                 data_server.send_message(ACK)
             else:
                 data_server.send_message(NAK)
-                data_server.log_message("Could not receive message from client, aborting!")
+                data_server.log_message("Could not receive mesage from client, aborting!")
                 return None
 
+            data_server.log_message("Receiving client mesage")
             client_message = data_server.receive_message(1024)
 
-            time.sleep(5)
+            data_server.log_message("Mesage received")
 
-            data_server.send_message(EOT)
-            
-            print(client_message.decode())
+            data_server.log_message("Logging client message 7 times")
+            cont = 1
+            while cont <= 7:
+                print(client_message.decode())
+                time.sleep(1)
+                cont += 1
 
             clients_message.append(client_message.decode())
+            
+            data_server.log_message("Sending EOT byte to confirm transference")
+            data_server.send_message(EOT)
 
         except Exception as e:
             data_server.shutdown_connection()
@@ -53,8 +65,9 @@ def server(port: int):
         
 
 if __name__ == '__main__':
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         executor.submit(server, FOO_CLIENT_PORT)
         executor.submit(server, BAR_CLIENT_PORT)
+        executor.submit(server, TMP_CLIENT_PORT)
     
     print(' : '.join(clients_message))

@@ -6,6 +6,7 @@ from  concurrent.futures import ThreadPoolExecutor
 
 FOO_CLIENT_PORT = 5000
 BAR_CLIENT_PORT = 5001
+TMP_CLIENT_PORT = 5002
 
 controller_semaphore = 1
 
@@ -36,9 +37,10 @@ def controll_access(client: str, port: int):
 
 if __name__ == '__main__':
     # controll_access('client_foo', FOO_CLIENT_PORT)
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         executor.submit(controll_access, 'client_foo', FOO_CLIENT_PORT)
         executor.submit(controll_access, 'client_bar', BAR_CLIENT_PORT)
+        executor.submit(controll_access, 'client_tmp', TMP_CLIENT_PORT)
         
 
 

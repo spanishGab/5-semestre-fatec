@@ -1,7 +1,7 @@
 from constants import (
     GITHUB_DIR, 
     DEFAULT_HOST, 
-    BAR_MESAGE
+    TMP_MESAGE
 )
 
 import sys
@@ -14,8 +14,8 @@ from libraries.constants.constants import ACK, NAK, CAN, STX, EOT
 from threading import Thread
 
 
-CONTROLLER_PORT = 5001
-SERVER_PORT = 6001
+CONTROLLER_PORT = 5002
+SERVER_PORT = 6002
 
 
 def client_mesage(mesage: bytes):
@@ -38,35 +38,35 @@ def client_mesage(mesage: bytes):
         while True:
             if response == ACK:
                 cli_controller.log_message("ACK byte received, permission granted")
-
-                client_bar = Client(host=DEFAULT_HOST, port=SERVER_PORT)
-                client_bar.connect()
+                
+                client_tmp = Client(host=DEFAULT_HOST, port=SERVER_PORT)
+                client_tmp.connect()
                 cli_controller.log_message("Connected to server port "+
                     str(SERVER_PORT))
 
                 cli_controller.log_message("Starting transference")
-                client_bar.log_message("Sending a STX byte to the server")
-                client_bar.send_message(STX)
+                client_tmp.log_message("Sending a STX byte to the server")
+                client_tmp.send_message(STX)
 
-                client_bar.log_message("Waiting for an ACK byte")
-                server_response = client_bar.receive_message(1)
+                client_tmp.log_message("Waiting for an ACK byte")
+                server_response = client_tmp.receive_message(1)
 
                 if server_response == ACK:
                     cli_controller.log_message("ACK byte received")
                     cli_controller.log_message("Sending thee mesage to the server")
 
-                    client_bar.send_message(mesage)
+                    client_tmp.send_message(mesage)
                     
-                    client_bar.log_message("Waiting for an EOT byte")
-                    server_response = client_bar.receive_message(1)
+                    client_tmp.log_message("Waiting for an EOT byte")
+                    server_response = client_tmp.receive_message(1)
                 else:
-                    client_bar.log_message("Transference refused by server, aborting!")
+                    client_tmp.log_message("Transference refused by server, aborting!")
                     return None
                 
                 if server_response == EOT:
                     cli_controller.log_message("EOT byte received")
-                    client_bar.log_message("Transference successfully finished")
-                    client_bar.shutdown_connection()
+                    client_tmp.log_message("Transference successfully finished")
+                    client_tmp.shutdown_connection()
                     break
             else:
                 cli_controller.log_message("Error! Response received: "+response.decode())
@@ -88,16 +88,16 @@ def client_mesage(mesage: bytes):
         else:
             return None
     except Exception as e:
-        client_bar.shutdown_connection()
+        client_tmp.shutdown_connection()
         cli_controller.shutdown_connection()
+
         raise e
     finally:
         cli_controller.shutdown_connection()
 
-
 if __name__ == '__main__':
     
-    client_mesage(b'I am bar')
+    client_mesage(b'I am tmp')
 
     
     
