@@ -29,8 +29,7 @@ class Controller():
     def add_connection(self, 
                        connection_alias: str, 
                        host: str='127.0.0.1', 
-                       port: int=5000,
-                       listen: int=1):
+                       port: int=5000):
         if isinstance(connection_alias, str):
             self.__connections[connection_alias] = Server(host, port)
             self.__connections[connection_alias].connect()
@@ -76,56 +75,56 @@ class Controller():
     
     def request_aquire(self, conn_alias: str, semaphore: int) -> object:
         try:
-            self.connections[conn_alias].log_message("Waiting for an NAK byte")
-            request = self.connections[conn_alias].receive_message(1)
+            self.connections[conn_alias].log_mesage("Waiting for an NAK byte")
+            request = self.connections[conn_alias].receive_mesage(1)
 
             if request == NAK:
-                self.connections[conn_alias].log_message("NAK byte received")
+                self.connections[conn_alias].log_mesage("NAK byte received")
 
                 acquire_response = self._acquire(semaphore)
 
                 if acquire_response is not False:
-                    self.connections[conn_alias].log_message("Sending an ACK byte, "+
+                    self.connections[conn_alias].log_mesage("Sending an ACK byte, "+
                         "acquired semaphore!")
 
-                    self.connections[conn_alias].send_message(ACK)
+                    self.connections[conn_alias].send_mesage(ACK)
                     return acquire_response
                 else:
-                    self.connections[conn_alias].log_message("Sending an CAN byte, "+
+                    self.connections[conn_alias].log_mesage("Sending an CAN byte, "+
                         "could not acquire semaphore!")
 
-                    self.connections[conn_alias].send_message(CAN)
+                    self.connections[conn_alias].send_mesage(CAN)
             else:
-                self.connections[conn_alias].log_message("NAK byte not received")
+                self.connections[conn_alias].log_mesage("NAK byte not received")
                 return None
         except KeyError:
             raise KeyError("The '"+conn_alias+"' connection alias does not exist")
     
     def request_release(self, conn_alias: str, semaphore: int) -> object:
         try:
-            self.connections[conn_alias].log_message("Waiting for an NAK byte")
-            request = self.connections[conn_alias].receive_message(1)
+            self.connections[conn_alias].log_mesage("Waiting for an NAK byte")
+            request = self.connections[conn_alias].receive_mesage(1)
 
             if request == NAK:
-                self.connections[conn_alias].log_message("NAK byte received")
+                self.connections[conn_alias].log_mesage("NAK byte received")
 
                 release_response = self._release(semaphore)
                 
                 if release_response is not False:
-                    self.connections[conn_alias].log_message("Sending an ACK byte, "+
+                    self.connections[conn_alias].log_mesage("Sending an ACK byte, "+
                         "released semaphore!")
 
-                    self.connections[conn_alias].send_message(ACK)
+                    self.connections[conn_alias].send_mesage(ACK)
                     return release_response
                 else:
-                    self.connections[conn_alias].log_message("Sending an CAN byte, "+
+                    self.connections[conn_alias].log_mesage("Sending an CAN byte, "+
                         "could not release semaphore!")
 
-                    self.connections[conn_alias].send_message(CAN)
+                    self.connections[conn_alias].send_mesage(CAN)
                     raise Exception("Client requested a 'release' before an 'acquire'"+
                         ", aborting!")
             else:
-                self.connections[conn_alias].log_message("NAK byte not received")
+                self.connections[conn_alias].log_mesage("NAK byte not received")
                 return None
         except KeyError:
             raise KeyError("The '"+conn_alias+"' connection alias does not exist")

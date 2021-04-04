@@ -26,26 +26,26 @@ def server(port: int):
         try:
             data_server = Server(host=DEFAULT_HOST, port=port)
             data_server.connect()
-            data_server.log_message("Connected to port "+str(port))
+            data_server.log_mesage("Connected to port "+str(port))
 
-            data_server.log_message("Waiting for a STX byte")
-            client_request = data_server.receive_message(1)
+            data_server.log_mesage("Waiting for a STX byte")
+            client_request = data_server.receive_mesage(1)
 
             if client_request == STX:
-                data_server.log_message("STX byte received")
-                data_server.log_message("Sending ACK byte to start transference")
-                data_server.send_message(ACK)
+                data_server.log_mesage("STX byte received")
+                data_server.log_mesage("Sending ACK byte to start transference")
+                data_server.send_mesage(ACK)
             else:
-                data_server.send_message(NAK)
-                data_server.log_message("Could not receive mesage from client, aborting!")
+                data_server.send_mesage(NAK)
+                data_server.log_mesage("Could not receive mesage from client, aborting!")
                 return None
 
-            data_server.log_message("Receiving client mesage")
-            client_message = data_server.receive_message(1024)
+            data_server.log_mesage("Receiving client mesage")
+            client_message = data_server.receive_mesage(1024)
 
-            data_server.log_message("Mesage received")
+            data_server.log_mesage("Mesage received")
 
-            data_server.log_message("Logging client message 7 times")
+            data_server.log_mesage("Logging client message 7 times")
             cont = 1
             while cont <= 7:
                 print(client_message.decode())
@@ -54,8 +54,8 @@ def server(port: int):
 
             clients_message.append(client_message.decode())
             
-            data_server.log_message("Sending EOT byte to confirm transference")
-            data_server.send_message(EOT)
+            data_server.log_mesage("Sending EOT byte to confirm transference")
+            data_server.send_mesage(EOT)
 
         except Exception as e:
             data_server.shutdown_connection()

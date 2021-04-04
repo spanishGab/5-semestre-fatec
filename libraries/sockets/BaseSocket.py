@@ -53,7 +53,7 @@ class BaseSocket(ABC):
     def connect(self, family: int=AF_INET, socket_type: int=SOCK_STREAM):
         pass
 
-    def send_message(self, message: bytes):
+    def send_mesage(self, message: bytes):
         """ Sends the given message through the connected port
 
         Args:
@@ -61,7 +61,7 @@ class BaseSocket(ABC):
         """
         self.connection.send(message)
     
-    def receive_message(self, buffer_size: int) -> bytes:
+    def receive_mesage(self, buffer_size: int) -> bytes:
         """ Receives a massege through the connected port
 
         Args:
@@ -73,7 +73,7 @@ class BaseSocket(ABC):
         
         return self.connection.recv(buffer_size)
 
-    def log_message(self, message: object):
+    def log_mesage(self, message: object):
         """ Logs a simple message in the console
 
         Args:

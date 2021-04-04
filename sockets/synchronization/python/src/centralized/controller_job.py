@@ -17,15 +17,15 @@ def controll_access(client: str, port: int):
 
     try:
         controller.add_connection(connection_alias=client, host=DEFAULT_HOST, 
-            port=port, listen=1)
-        controller.connections[client].log_message("Connected to "+ client)
+            port=port)
+        controller.connections[client].log_mesage("Connected to "+ client)
 
         while controller_semaphore == 0: continue
 
-        controller.connections[client].log_message(client+" requesting acquire")
+        controller.connections[client].log_mesage(client+" requesting acquire")
         controller_semaphore = controller.request_aquire(client, controller_semaphore)
 
-        controller.connections[client].log_message(client+" requesting release")
+        controller.connections[client].log_mesage(client+" requesting release")
         controller_semaphore = controller.request_release(client, controller_semaphore)
     except Exception as e:
             controller.connections[client].shutdown_connection()

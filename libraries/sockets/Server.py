@@ -3,6 +3,8 @@ from .BaseSocket import BaseSocket
 import socket
 from socket import AF_INET, SOCK_STREAM
 
+from ..constants.constants import TYPE_ERROR_MESAGE
+
 class Server(BaseSocket):
 
     def __init__(self, host: str='127.0.0.1', port: int=5000):
