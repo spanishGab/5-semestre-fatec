@@ -31,7 +31,8 @@ class Controller():
                        host: str='127.0.0.1', 
                        port: int=5000):
         if isinstance(connection_alias, str):
-            self.__connections[connection_alias] = Server(host, port)
+            self.__connections[connection_alias] = Server(connection_alias, host, 
+                port)
             self.__connections[connection_alias].connect()
         
         else:

@@ -20,7 +20,8 @@ SERVER_PORT = 6001
 
 def client_mesage(mesage: bytes):
     try:
-        cli_controller = Client(host=DEFAULT_HOST, port=CONTROLLER_PORT)
+        cli_controller = Client(alias='contoller', host=DEFAULT_HOST, 
+            port=CONTROLLER_PORT)
         
         cli_controller.log_mesage("Connecting to the controller")
         
@@ -39,7 +40,7 @@ def client_mesage(mesage: bytes):
             if response == ACK:
                 cli_controller.log_mesage("ACK byte received, permission granted")
 
-                client_bar = Client(host=DEFAULT_HOST, port=SERVER_PORT)
+                client_bar = Client(alias='bar', host=DEFAULT_HOST, port=SERVER_PORT)
                 client_bar.connect()
                 cli_controller.log_mesage("Connected to server port "+
                     str(SERVER_PORT))

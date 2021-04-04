@@ -4,11 +4,14 @@ from Controller import Controller
 
 from  concurrent.futures import ThreadPoolExecutor
 
+from threading import Semaphore
+
 FOO_CLIENT_PORT = 5000
 BAR_CLIENT_PORT = 5001
 TMP_CLIENT_PORT = 5002
 
 controller_semaphore = 1
+thread_semaphore = Semaphore(1)
 
 
 def controll_access(client: str, port: int):
@@ -20,13 +23,13 @@ def controll_access(client: str, port: int):
             port=port)
         controller.connections[client].log_mesage("Connected to "+ client)
 
-        while controller_semaphore == 0: continue
 
-        controller.connections[client].log_mesage(client+" requesting acquire")
-        controller_semaphore = controller.request_aquire(client, controller_semaphore)
+        with thread_semaphore:
+            controller.connections[client].log_mesage(client+" requesting acquire")
+            controller_semaphore = controller.request_aquire(client, controller_semaphore)
 
-        controller.connections[client].log_mesage(client+" requesting release")
-        controller_semaphore = controller.request_release(client, controller_semaphore)
+            controller.connections[client].log_mesage(client+" requesting release")
+            controller_semaphore = controller.request_release(client, controller_semaphore)
     except Exception as e:
             controller.connections[client].shutdown_connection()
             raise e
