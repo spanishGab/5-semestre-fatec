@@ -5,10 +5,29 @@ from socket import AF_INET, SOCK_STREAM
 
 from ..constants.constants import TYPE_ERROR_MESAGE
 
+STANDARD_LOG_MESSAGE = "Server {srv}: {msg}"
+
 class Server(BaseSocket):
 
-    def __init__(self, host: str='127.0.0.1', port: int=5000):
+    def __init__(self, 
+                 alias: str='server',
+                 host: str='127.0.0.1', 
+                 port: int=5000):
         super().__init__(host, port)
+
+        self.alias = alias
+    
+    @property
+    def alias(self):
+        return self.__alias
+    
+    @alias.setter
+    def alias(self, alias: str):
+        if isinstance(alias, str):
+            self.__alias = alias
+        else:
+            raise TypeError(TYPE_ERROR_MESAGE.format(param='alias', tp='str',
+                inst=str(type(alias))))
     
     def connect(self,
                 family: int=AF_INET, 
@@ -35,3 +54,11 @@ class Server(BaseSocket):
             raise ValueError("The given 'socket_type' is not a valid socket type")
 
         self.connection, _ = tcp.accept()
+    
+    def log_mesage(self, message: object):
+        """ Logs a simple message in the console
+
+        Args:
+            message (object): the message to be logged
+        """
+        print(STANDARD_LOG_MESSAGE.format(srv=self.alias, msg=message))

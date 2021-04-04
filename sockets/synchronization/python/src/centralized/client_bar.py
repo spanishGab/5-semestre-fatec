@@ -62,7 +62,7 @@ def client_mesage(mesage: bytes):
                     server_response = client_bar.receive_mesage(1)
                 else:
                     client_bar.log_mesage("Transference refused by server, aborting!")
-                    return None
+                    break
                 
                 if server_response == EOT:
                     cli_controller.log_mesage("EOT byte received")
@@ -71,7 +71,7 @@ def client_mesage(mesage: bytes):
                     break
             else:
                 cli_controller.log_mesage("Error! Response received: "+response.decode())
-                return None
+                break
         
         cli_controller.log_mesage("Sending an NAK byte to the controller "+
             "(release request)")
@@ -86,8 +86,7 @@ def client_mesage(mesage: bytes):
         elif response == CAN:
             raise Exception("Requested a 'release' before an 'acquire'"+
                 ", aborting!")
-        else:
-            return None
+
     except Exception as e:
         client_bar.shutdown_connection()
         cli_controller.shutdown_connection()

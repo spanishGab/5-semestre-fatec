@@ -23,7 +23,6 @@ def controll_access(client: str, port: int):
             port=port)
         controller.connections[client].log_mesage("Connected to "+ client)
 
-
         with thread_semaphore:
             controller.connections[client].log_mesage(client+" requesting acquire")
             controller_semaphore = controller.request_aquire(client, controller_semaphore)
@@ -31,8 +30,8 @@ def controll_access(client: str, port: int):
             controller.connections[client].log_mesage(client+" requesting release")
             controller_semaphore = controller.request_release(client, controller_semaphore)
     except Exception as e:
-            controller.connections[client].shutdown_connection()
-            raise e
+        controller.connections[client].shutdown_connection()
+        raise e
     finally:
         controller.connections[client].shutdown_connection()
 

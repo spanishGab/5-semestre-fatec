@@ -37,7 +37,7 @@ def server(port: int):
             else:
                 data_server.send_mesage(NAK)
                 data_server.log_mesage("Could not receive mesage from client, aborting!")
-                return None
+                break
 
             data_server.log_mesage("Receiving client mesage")
             client_message = data_server.receive_mesage(1024)
