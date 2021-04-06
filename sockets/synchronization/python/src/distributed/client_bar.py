@@ -23,7 +23,7 @@ SEMAPHORE = Semaphore(1)
 not_using_server = True
 import time
 
-def receive_client_message():
+def receive_client_access_request():
     global not_using_server
 
     try:
@@ -161,5 +161,5 @@ if __name__ == '__main__':
     with ThreadPoolExecutor(max_workers=2) as executor:
         executor.submit(send_client_mesage, b'I am bar', SERVER_PORT)
 
-        executor.submit(receive_client_message)
+        executor.submit(receive_client_access_request)
 
