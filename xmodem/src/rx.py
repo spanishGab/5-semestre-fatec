@@ -3,7 +3,7 @@ import serial
 from common_constants import *
 from Packet import Packet
 
-TRANSFER_DIRECTORY = os.path.join(USER_HOME, 'Documentos')
+DESTINATION_DIR = os.path.join(os.path.split(__file__)[0], '..', 'downloads')
 
 def receive_file(port: str, file_name: str):
     rx = serial.Serial(port)
@@ -19,7 +19,7 @@ def receive_file(port: str, file_name: str):
     print("Receiving line from TX\n")
 
     # creating a new empty file to receive the content  
-    open(os.path.join(TRANSFER_DIRECTORY, file_name),
+    open(os.path.join(DESTINATION_DIR, file_name),
         mode='w',
         encoding='ASCII'
     ).close()
@@ -78,7 +78,7 @@ def receive_file(port: str, file_name: str):
                 rx.write(ACK)
                 
                 # writing the received data to a new file
-                with open(os.path.join(TRANSFER_DIRECTORY, file_name),
+                with open(os.path.join(DESTINATION_DIR, file_name),
                     mode='a+',
                     encoding='ASCII'
                 ) as writer:
@@ -94,16 +94,6 @@ def receive_file(port: str, file_name: str):
 
         # waiting for a SOH or an EOT char
         received_line = rx.read(1)
-    
-    #! rz não implementa o segundo envio de EOT?
-    # # sending a NAK char to TX
-    # rx.write(NAK)
-    
-    # # waiting for a EOT char to finish the transference
-    # transaction_complete = rx.read(1)
-    
-    # if transaction_complete == EOT:
-    #     # sending a ACK char to TX to confirm the transference end
     
     # # sending a ACK char to TX
     rx.write(ACK)

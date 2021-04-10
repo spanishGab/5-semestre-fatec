@@ -74,18 +74,6 @@ def transfer_file(port_path: str, file_path: str):
             
         # sending an EOT char to indicate the end of the transmission
         tx.write(EOT)
-    
-
-    #! rz não implementa o segundo envio de EOT?
-    # print("Waiting for NAK")
-    # # waiting for a NAK char
-    # transaction_complete = tx.read(1)
-
-    # if transaction_complete == NAK:
-    #     # sending another EOT char to indicate the transference success
-    #     tx.write(EOT)
-    #     print("NAK received!")
-
 
     # checking for thr end off transmition
     if tx.read(1) == ACK:

@@ -4,12 +4,12 @@ from pathlib import Path
 from common_constants import *
 
 HOME_DIR = os.environ['HOME'] if os.environ['HOME'] is not None else '~'
-SOURCE_DIR_NAME = 'Source'
+SOURCE_DIR_NAME = 'Transfer'
 SOURCE_FILES_DIR = os.path.join(HOME_DIR, SOURCE_DIR_NAME)
 BASE_PORT_PATH = "/dev/pts/"
-TRANSFERENCES_SUCCEDED = "transferencia de arquivos realizada com sucesso"
-FILE_NAME_NOT_SENT = "falha ao enviar nome de arquivo"
-FILE_LINE_NOT_SENT = "falha ao enviar linha de arquivo"
+TRANSFERENCES_SUCCEDED = "file transference successfully finished"
+FILE_NAME_NOT_SENT = "failed to send file name"
+FILE_LINE_NOT_SENT = "failed to send file line"
 
 def transfer_files(serial_port_number: str):
     tx = serial.Serial(BASE_PORT_PATH+serial_port_number)
@@ -65,7 +65,7 @@ def transfer_files(serial_port_number: str):
 
 if __name__ == '__main__':
     print("""Welcome to the SFTP (Simple File Transfer Protocol).
-    Put the files you want to transfer into the ~/Source directory""")
+    Put the files you want to transfer into the ~/{} directory""".format(SOURCE_DIR_NAME))
 
     if not os.path.isdir(SOURCE_FILES_DIR):
         os.mkdir(SOURCE_FILES_DIR)

@@ -1,0 +1,11 @@
+STARTING_TRANSFERENCE = "starting transference\n".encode()
+ABLE_TO_RECEIVE = "able to receive\n".encode()
+FILE_QUANTITY_RECEIVED = "file quantity received\n".encode()
+END_OF_FILE = "TX__EOF__RX\n".encode()
+FILE_NAME_RECEIVED = "file name received\n".encode()
+FILE_LINE_RECEIVED = "file row received\n".encode()
+UNABLE_TO_TRANSFER = "can't make transference\n".encode()
+RESULTS_RECEIVED = "results successfully received!\n".encode()
+TRANSFERENCES_END = "finished transferences\n".encode()
+FILE_TRANSFERENCE_SUCCES = "file '{}' successfully recived and copied"
+FILE_TRANSFERENCE_ERROR = "error during file transference: '{}'. {}"

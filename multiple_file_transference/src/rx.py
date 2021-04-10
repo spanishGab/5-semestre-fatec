@@ -2,12 +2,10 @@ import serial
 import os
 from common_constants import *
 
-HOME_DIR = os.environ['HOME'] if os.environ['HOME'] is not None else '~'
-DESTINATION_DIR_NAME = 'Documentos'
-DESTINATION_DIR = os.path.join(HOME_DIR, DESTINATION_DIR_NAME)
+DESTINATION_DIR = os.path.join(os.path.split(__file__)[0], '..', 'downloads')
 BASE_PORT_PATH = "/dev/pts/"
-TRANSFERENCE_FAILED = "nao foi possivel receber confirmacao de transferencia\n".encode()
-QUANTITY_ERROR = "falha no recebimento da quantidade de arquivos: "
+TRANSFERENCE_FAILED = "can't receive transference confirmation\n".encode()
+QUANTITY_ERROR = "failed to receive  file quantity: "
 
 
 def receive_files(serial_port_number: str):
