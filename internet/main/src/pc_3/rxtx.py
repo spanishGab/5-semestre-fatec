@@ -7,9 +7,9 @@ from libraries.serials.Tx import Tx
 from libraries.serials.Rx import Rx
 from libraries.constants.constants import ACK, CAN, NAK
 
-TX_ALIAS = "TX_PC1"
-RX_ALIAS = "RX_PC1"
-RX_TX_ALIAS = "RX_TX_PC1"
+TX_ALIAS = "TX_PC3"
+RX_ALIAS = "RX_PC3"
+RX_TX_ALIAS = "RX_TX_PC3"
 
 
 def send(alias: str, 

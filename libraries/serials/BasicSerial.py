@@ -36,7 +36,7 @@ class BasicSerial:
     
     @property
     def connection(self):
-        return __connection
+        return self.__connection
     
     @connection.setter
     def connection(self, connection: serial.Serial):
@@ -97,11 +97,11 @@ class BasicSerial:
         start = self.receive_mesage(1)
 
         if start == SOH:
-            self.log_mesage("Transference start request received")
+            self.log_mesage("Received transference start request")
             self.log_mesage("Starting transference")
             self.send_mesage(ACK)
         else:
-            self.log_mesage("Error!, invalid byte received: '"start"'")
+            self.log_mesage("Error!, invalid byte received: '"+start.decode()+"'")
             self.send_mesage(NAK)
     
     def receive_confirmation(self) -> bytes:
@@ -110,27 +110,27 @@ class BasicSerial:
         if confirm == ACK:
             self.log_mesage("Confirmation received")
         elif confirm == CAN:
-            self.log_mesage("Cancel mesage received")
+            self.log_mesage("Canceling mesage received")
         elif confirm == NAK:
             self.log_mesage("No confirmation received")
         else:
-            self.log_mesage("Error!, invalid byte received: '"confirm"'")
+            self.log_mesage("Error!, invalid byte received: '"+confirm.decode()+"'")
 
         return confirm
     
     def inform_end_of_transference(self):
-        self.log_mesage("Ending transference")
+        self.log_mesage("Finishing transference")
         self.send_mesage(EOT)
     
     def wait_end_of_transference(self):
         end = self.receive_mesage(1)
 
         if end == EOT:
-            self.log_mesage("Transference end request received")
-            self.log_mesage("Ending transference")
+            self.log_mesage("Received transference end request")
+            self.log_mesage("Transference successfully finished")
             self.send_mesage(ACK)
         else:
-            self.log_mesage("Error!, invalid byte received: '"end"'")
+            self.log_mesage("Error!, invalid byte received: '"+end.decode()+"'")
             self.send_mesage(NAK)
 
         
