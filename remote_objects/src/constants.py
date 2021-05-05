@@ -1,0 +1,5 @@
+PYRO_NAME_SERVER_BASE = "PYRONAME:"
+
+CARTESIAN_PLANE = [
+    [' '*33+'|5'+' '*33]
+    ]
