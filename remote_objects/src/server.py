@@ -1,18 +1,20 @@
-# saved as greeting-server.py
 import Pyro5.api
 
-
+#! Teste com variável global
+# result = None
 
 @Pyro5.api.expose
-class GreetingMaker(object):
-    def get_fortune(self, name):
-        return "Hello, {0}. Here is your fortune message:\n" \
-               "Tomorrow's lucky number is 12345678.".format(name)
+class NumberSum:
+    def sum_numbers(self, client, nbr1, nbr2):
+        result = nbr1+nbr2
 
-daemon = Pyro5.server.Daemon()         # make a Pyro daemon
-ns = Pyro5.api.locate_ns()             # find the name server
-uri = daemon.register(GreetingMaker)   # register the greeting maker as a Pyro object
-ns.register("example.greeting", uri)   # register the object with a name in the name server
+        print(f'{client}: {nbr1} + {nbr2} = {result}')
+        return result
 
-print("Ready.")
-daemon.requestLoop()                   # start the event loop of the server to wait for calls
+daemon = Pyro5.server.Daemon()
+ns = Pyro5.api.locate_ns()
+uri = daemon.register(NumberSum)
+ns.register("number.sum", uri)
+
+print("Server Ready.")
+daemon.requestLoop()
