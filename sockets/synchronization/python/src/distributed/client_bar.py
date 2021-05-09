@@ -61,9 +61,11 @@ def receive_client_access_request():
                 return None
     except Exception as e:
         bar_server.shutdown_connection()
+        bar_server.close_connection()
         raise e
     finally:
         bar_server.shutdown_connection()
+        bar_server.close_connection()
 
 
 def send_client_mesage(mesage: bytes, server_port: int):
@@ -143,9 +145,12 @@ def send_client_mesage(mesage: bytes, server_port: int):
     except Exception as e:
         bar_client.shutdown_connection()
         server_client.shutdown_connection()
+        bar_client.close_connection()
+        server_client.close_connection()
         raise e
     finally:
         bar_client.shutdown_connection()
+        bar_client.close_connection()
 
 
 def try_client_connection(client: Client):

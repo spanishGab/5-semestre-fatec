@@ -1,7 +1,5 @@
 import Pyro5.api
 
-#! Teste com variável global
-# result = None
 
 @Pyro5.api.expose
 class NumberSum:

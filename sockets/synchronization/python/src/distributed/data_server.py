@@ -58,9 +58,11 @@ def server(port: int):
 
     except Exception as e:
         data_server.shutdown_connection()
+        data_server.close_connection()
         raise e
     finally:
         data_server.shutdown_connection()
+        data_server.close_connection()
         
 
 if __name__ == '__main__':
