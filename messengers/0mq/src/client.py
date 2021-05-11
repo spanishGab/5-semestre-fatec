@@ -1,37 +1,75 @@
 from zmq import REQ
-import sys
-from constants import (GITHUB_DIR, MESSAGE_SENT_TEXT, MESSENGER_SERVER_PORT)
+from constants import (MESSENGER_SERVER_PORT, EMPTY_STRING,
+                       CONTACTS_PORTS, RECEPTION_CONFIRMATION_MESSAGE)
 
-sys.path.insert(1, GITHUB_DIR)
+from utils import print_message
 
 from libraries.messengers.BaseZeroMqSocketContextManager import \
     BaseZeroMqSocketContextManager
 
-from concurrent.futures import ThreadPoolExecutor
+client_a = BaseZeroMqSocketContextManager(init_context=True)
 
-CLIENT_A_NAME = "Gabriel"
+SERVER_ALIAS = 'srv'
 
 
-def send_message():
-    client_a = BaseZeroMqSocketContextManager(init_context=True)
+def start_communication(client_name: str,
+                        client_port: int,
+                        recipient_port: int):
+    client_a.add_socket_to_context(socket_name=client_name, socket_type=REQ)
+    client_a.add_socket_to_context(socket_name=(client_name+SERVER_ALIAS))
 
-    client_a.add_socket_to_context(socket_name=CLIENT_A_NAME, socket_type=REQ)
-    
-    client_a.connect_socket_to_address(CLIENT_A_NAME, 
+    client_a.connect_socket_to_address(client_name,
                                        address_port=MESSENGER_SERVER_PORT)
-    
-    while True:
-        message = input(f"{CLIENT_A_NAME}, Type your message: ").encode()
 
-        client_a.send_message(CLIENT_A_NAME, message)
+    client_a.bind_socket_to_address(client_name+SERVER_ALIAS,
+                                    address_port=client_port)
 
-        message = client_a.receive_message(CLIENT_A_NAME)
+    actual_message = EMPTY_STRING.encode()
 
-        print(MESSAGE_SENT_TEXT.format(cli=message[0].decode(), msg=message[1].decode()))
-        
+    while actual_message.decode().capitalize() != 'Beye':
+        message = input(
+            f"{client_name}, Type your message or hit ENTER to " +
+            "wait for a mesage to arive: "
+        ).encode()
 
-    client_a.disconnect_socket_from_address(CLIENT_A_NAME)
+        if message.decode() == EMPTY_STRING:
+            message = client_a.receive_message(client_name+SERVER_ALIAS)
+
+            message_sender = message[0].decode()
+            actual_message = message[1]
+
+            print_message(actual_message.decode(), message_sender)
+
+            client_a.send_message(client_name+SERVER_ALIAS,
+                                  RECEPTION_CONFIRMATION_MESSAGE)
+        else:
+            client_a.send_message(client_name, message,
+                                  message_sender=client_name,
+                                  message_recipient=recipient_port)
+
+            client_a.receive_message(client_name)
+
+            actual_message = message
+
+    client_a.disconnect_socket_from_address(client_name)
 
 
 if __name__ == '__main__':
-    send_message()
+    sender_name = input("Type your name: ")
+
+    contact_name = input(
+        "Enter the contact with whom you want to communicate: ")
+
+    try:
+        sender_port = CONTACTS_PORTS[sender_name]
+    except KeyError:
+        print("You are not registered on the RawtsApp yet, aborting")
+        quit()
+
+    try:
+        contact_port = CONTACTS_PORTS[contact_name]
+    except KeyError:
+        print("{contact_name} doesn't exist on your contacts list, aborting")
+        quit()
+
+    start_communication(sender_name, sender_port, contact_port)
