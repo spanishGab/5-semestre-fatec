@@ -5,10 +5,21 @@ from collections import namedtuple
 from ..constants.constants import TYPE_ERROR_MESAGE, VALUE_ERROR_MESSAGE
 
 ADDRESS_PATTERN = '{protocol}://{interface}:{port}'
-DEFAULT_MESSAGE_SEPARATOR = ':'.encode()
+DEFAULT_MESSAGE_SEPARATOR = ':'
+
 SocketIteratorResult = namedtuple('SocketIteratorResult', ['name', 'content'])
 
-SOCKET_NAME_RESTRICTION = "'socket_name' must be equal to some of these values {}"
+SOCKET_NAME_RESTRICTION = ("'socket_name' must be equal to some of these " +
+                           " values {}")
+
+MESSAGE_STRUCTURE = (
+    "{sender_name}" + DEFAULT_MESSAGE_SEPARATOR +
+    "{message}" + DEFAULT_MESSAGE_SEPARATOR +
+    "{recipient_name}" + DEFAULT_MESSAGE_SEPARATOR +
+    "{recipient_protocol}" + DEFAULT_MESSAGE_SEPARATOR +
+    "{recipient_interace}" + DEFAULT_MESSAGE_SEPARATOR +
+    "{recipient_port}" + DEFAULT_MESSAGE_SEPARATOR
+)
 
 
 class BaseZeroMqSocketContextManager:
@@ -156,7 +167,7 @@ class BaseZeroMqSocketContextManager:
     def receive_message(self, socket_name: str) -> list:
         if isinstance(socket_name, str):
             if socket_name in self.__socket_names:
-                message = self.sockets[socket_name]['socket'].recv()
+                message = self.sockets[socket_name]['socket'].recv_string()
                 message = message.split(DEFAULT_MESSAGE_SEPARATOR)
 
                 return message
@@ -173,17 +184,37 @@ class BaseZeroMqSocketContextManager:
 
     def send_message(self,
                      socket_name: str,
-                     data: bytes,
+                     message: str,
                      **kwargs) -> object:
         if isinstance(socket_name, str):
             if socket_name in self.__socket_names:
-                result = self.sockets[socket_name]['socket'].send(
-                    data=(kwargs.get('message_sender', socket_name).encode() +
-                          DEFAULT_MESSAGE_SEPARATOR +
-                          data +
-                          DEFAULT_MESSAGE_SEPARATOR +
-                          (str(kwargs.get('message_recipient', socket_name))
-                           .encode()))
+                result = self.sockets[socket_name]['socket'].send_string(
+                    u=(
+                        MESSAGE_STRUCTURE.format(
+                            sender_name=kwargs.get('message_sender',
+                                                   socket_name),
+                            message=message,
+
+                            recipient_name=(
+                                kwargs.get('message_recipient_name',
+                                           'contact')
+                            ),
+
+                            recipient_protocol=(
+                                kwargs.get('message_recipient_protocol',
+                                           'tcp')
+                            ),
+
+                            recipient_interace=(
+                                kwargs.get('message_recipient_interace',
+                                           '127.0.0.1')
+                            ),
+                            recipient_port=(
+                                str(kwargs.get('message_recipient_port',
+                                               5555))
+                            )
+                        )
+                    )
                 )
 
                 return result
